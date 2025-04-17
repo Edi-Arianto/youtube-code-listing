@@ -170,7 +170,7 @@ function bacaForm(e) {
 //   const e = {
 //     namedValues: {
 //       "Nama Lengkap": ["Tes Nama"],
-//       "No. WhatsApps": ["6285353532789"],
+//       "No. WhatsApps": ["628"],
 //       "Kategori": ["Umum"]
 //     }
 //   };
