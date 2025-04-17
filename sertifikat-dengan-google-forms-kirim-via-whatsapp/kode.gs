@@ -11,18 +11,19 @@ function salinFile(tanggalTerbit) {
 }
 
 
-function editFile(idSlideSalinan, namaPeserta) {
-  // buka file salinan, lihat shapes yang ada
+function editFile(idSlideSalinan, namaPeserta, kategori) {
   const slides = SlidesApp.openById(idSlideSalinan);
-  const slide  = slides.getSlides()[0];
+  const slide = slides.getSlides()[0];
   const shapes = slide.getShapes();
 
-  // edit teks
   shapes.forEach(shape => {
-    shape.getText().replaceAllText('<nama_peserta>', namaPeserta);
+    if (shape.getText) {
+      const textRange = shape.getText();
+      textRange.replaceAllText('<<Nama Lengkap>>', namaPeserta);
+      textRange.replaceAllText('<<Kategori>>', kategori);
+    }
   });
 
-  // simpan file
   slides.saveAndClose();
 }
 
@@ -62,25 +63,36 @@ function hapusFileSalinan(idSlideSalinan) {
   DriveApp.getFileById(idSlideSalinan).setTrashed(true);
 }
 
+function tulisPesan(namaPeserta, urlSertifikatPdf, namaAcara = 'Dharma Shanti', tanggalAcara = '17 April 2025') {
+  const pesan = `*E-SERTIFIKAT - ${namaPeserta} - ${namaAcara}*
 
-function tulisPesan(namaPeserta, urlSertifikatPdf) {
-  const pesan = `*SERTIFIKAT KEHADIRAN SEMINAR*
+Assalamualaikum warahmatullahi wabarakatuh,  
+Salam sejahtera bagi kita semua,  
+Shalom,  
+Om Swastiastu,  
+Namo Buddhaya,  
+Salam Kebajikan.
 
-Bismillah.
+Kami mengucapkan terima kasih atas partisipasi aktif Anda dalam *Seminar ${namaAcara}*.
 
-Berikut kami kirimkan link download sertifikat kehadiran seminar untuk:
+Semoga kegiatan ini menjadi sumber inspirasi dan memperkuat nilai-nilai spiritual dalam kehidupan kita bersama.
 
-${namaPeserta}
+Sertifikat ini menjadi bukti kontribusi dan semangat belajar Anda.
 
-Harap segera didownload, maksimal 3 hari setelah acara berakhir.
+📄 *Nama Peserta:* ${namaPeserta}
+📅 *Tanggal Acara:* ${tanggalAcara}
 
-Terima kasih.
-
-*Link Download:*
+🔗 *Link Download Sertifikat:*
 ${urlSertifikatPdf}
 
-Catatan:
-Jika link di atas tidak bisa diklik, silakan simpan nomor ini sebagai kontak, atau balas pesan ini dengan jawaban sembarang, misal: "OK"`;
+📌 *Catatan Penting:*
+Jika link di atas tidak bisa diklik, silakan:
+1️⃣ Simpan nomor ini sebagai kontak  
+2️⃣ Atau balas pesan ini dengan teks sembarang, misal: *"OK"*
+
+Terima kasih atas keikutsertaannya.
+
+*Salam sejahtera bagi kita semua.*;`
 
   return pesan;
 }
@@ -122,16 +134,18 @@ function kirimWa(nomor, pesan) {
 
 function bacaForm(e) {
   // baca inputan form
-  const namaPeserta = e.namedValues['Nama Peserta'][0].trim();
-  const noWaPeserta = e.namedValues['No. WhatsApp'][0].trim();
+  const namaPeserta = e.namedValues['Nama Lengkap'][0].trim();
+  const noWaPeserta = e.namedValues['No. WhatsApps'][0].trim();
+  const kategori = e.namedValues['Kategori'][0].trim(); // Tambahkan ini!
 
   // tanggal dan waktu
   const now = new Date;
   const tanggalTerbit = `${now.getDate()}-${now.getMonth()+1}-${now.getFullYear()}_${now.getHours()}.${now.getMinutes()}.${now.getSeconds()}`;
 
+
   // proses
   const idSlideSalinan = salinFile(tanggalTerbit);
-  editFile(idSlideSalinan, namaPeserta);
+  editFile(idSlideSalinan, namaPeserta, kategori);
   const idSertifikatPdf = eksporFile(idSlideSalinan, tanggalTerbit);
   const urlSertifikatPdf = ambilUrlPdf(idSertifikatPdf);
   hapusFileSalinan(idSlideSalinan);
@@ -146,8 +160,19 @@ function bacaForm(e) {
   const lastRow = sheet.getLastRow();
 
   // tulis link pdf
-  sheet.getRange(`E${lastRow}`).setValue(urlSertifikatPdf);
+  sheet.getRange(`L${lastRow}`).setValue(urlSertifikatPdf);
 
   // tulis hasil pengiriman
-  sheet.getRange(`F${lastRow}`).setValue(report);
+  sheet.getRange(`M${lastRow}`).setValue(report);
 }
+
+// function testBacaForm() {
+//   const e = {
+//     namedValues: {
+//       "Nama Lengkap": ["Tes Nama"],
+//       "No. WhatsApps": ["6285353532789"],
+//       "Kategori": ["Umum"]
+//     }
+//   };
+//   bacaForm(e);
+// }
